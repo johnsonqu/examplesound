@@ -1,1 +1,8 @@
 /* CSS declarations go here */
+.contents {
+    margin: 10px;
+    padding: 10px;
+}
+#navigation {float:none; text-align:center; display:table; list-style:none; width:100%; }
+#navigation li { float:none; display:table-cell; }
+#navigation li a { display:block; line-height:20px; margin:0px 5px; }

@@ -1,23 +1,79 @@
+Parties = new Mongo.Collection("parties");
 if (Meteor.isClient) {
-  // counter starts at 0
-  Session.setDefault("counter", 0);
+    angular.module('qrcode',['angular-meteor', 'ui.router']);
 
-  Template.hello.helpers({
-    counter: function () {
-      return Session.get("counter");
-    }
-  });
+    Meteor.startup(function () {
+      angular.bootstrap(document, ['qrcode']);
+    });
+    
+    angular.module("qrcode").config(['$urlRouterProvider', '$stateProvider', '$locationProvider',
+      function($urlRouterProvider, $stateProvider, $locationProvider){
 
-  Template.hello.events({
-    'click button': function () {
-      // increment the counter when button is clicked
-      Session.set("counter", Session.get("counter") + 1);
-    }
-  });
+        $locationProvider.html5Mode(true);
+
+        $stateProvider
+          .state('parties', {
+            url: '/parties',
+            template: UiRouter.template('parties_list.html'),
+            controller: 'PartiesListCtrl'
+          })
+          .state('partyDetails', {
+            url: '/parties/:partyId',
+            template: UiRouter.template('party_detail.html'),
+            controller: 'PartyDetailsCtrl'
+          })
+          .state('parties2', {
+            url: '/parties2',
+            template: UiRouter.template('parties_list2.html'),
+          });
+
+          $urlRouterProvider.otherwise("/parties");
+    }]);
+    
+    angular.module("qrcode").controller("PartiesListCtrl", ['$scope', '$collection',
+      function($scope, $collection){
+        $collection(Parties).bind($scope, 'parties', true, true); 
+        $scope.remove = function(party){
+          $scope.parties.splice( $scope.parties.indexOf(party), 1 );
+        };
+        $scope.insert = function(newParty) {
+          $scope.parties.push(newParty);
+        };
+      }
+    ]);
+    
+    angular.module("qrcode").controller("PartyDetailsCtrl", ['$scope', '$stateParams', '$collection',
+      function($scope, $stateParams, $collection){
+        $collection(Parties).bindOne($scope, 'party', $stateParams.partyId, true, true);
+    }]);
+
+    angular.module("qrcode").controller("HeaderController", ['$scope', '$location',
+      function HeaderController($scope, $location) 
+      { 
+          $scope.isActive = function (viewLocation) { 
+              return viewLocation === $location.path();
+          };
+      } 
+    ]);
 }
 
 if (Meteor.isServer) {
   Meteor.startup(function () {
     // code to run on server at startup
+    if (Parties.find().count() === 0) {
+
+      var parties = [
+        {'name': 'Dubstep-Free Zone',
+          'description': 'Fast just got faster with Nexus S.'},
+        {'name': 'All dubstep all the time',
+          'description': 'Get it on!'},
+        {'name': 'Savage lounging',
+          'description': 'Leisure suit required. And only fiercest manners.'}
+      ];
+
+      for (var i = 0; i < parties.length; i++)
+        Parties.insert({name: parties[i].name, description: parties[i].description});
+
+    }
   });
 }

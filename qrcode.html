@@ -1,14 +1,21 @@
 <head>
-  <title>qrcode</title>
+  <meta charset="utf-8">
+  <title>QRCode</title>
+  <meta name="viewport" content="user-scalable=no, initial-scale=1, minimal-ui, maximum-scale=1, minimum-scale=1" />
+  <base href='/' />
 </head>
 
 <body>
-  <h1>Welcome to Meteor!</h1>
-
-  {{> hello}}
+    <div class='row'>
+        <div class='col-md-12 col-sm-12'>
+            <ul class="nav nav-pills" role="tablist" ng-controller="HeaderController" id='navigation'>
+                <li ng-class="{ active: isActive('/parties')}"><a href="/parties">进货</a></li>
+                <li ng-class="{ active: isActive('/parties2')}"><a href="/parties2">销售</a></li>
+            </ul>
+        </div>
+    </div>
+    <div class="contents">
+        <div ui-view></div>
+    </div>
 </body>
 
-<template name="hello">
-  <button>Click Me</button>
-  <p>You've pressed the button {{counter}} times.</p>
-</template>
