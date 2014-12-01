@@ -7,15 +7,15 @@
 
 <body>
     <div class='row'>
-        <div class='col-md-12 col-sm-12'>
+        <div class='col-md-9 col-sm-9'>
             <ul class="nav nav-pills" role="tablist" ng-controller="HeaderController" id='navigation'>
                 <li ng-class="{ active: isActive('/parties')}"><a href="/parties">进货</a></li>
                 <li ng-class="{ active: isActive('/parties2')}"><a href="/parties2">销售</a></li>
             </ul>
         </div>
+        <meteor-include src="loginButtons"></meteor-include>
     </div>
     <div class="contents">
         <div ui-view></div>
     </div>
 </body>
-

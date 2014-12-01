@@ -25,6 +25,7 @@ if (Meteor.isClient) {
           .state('parties2', {
             url: '/parties2',
             template: UiRouter.template('parties_list2.html'),
+            controller: 'ScanInCtrl'
           });
 
           $urlRouterProvider.otherwise("/parties");
@@ -38,6 +39,25 @@ if (Meteor.isClient) {
         };
         $scope.insert = function(newParty) {
           $scope.parties.push(newParty);
+        };
+      }
+    ]);
+    
+    angular.module("qrcode").controller("ScanInCtrl", ['$scope', '$collection',
+      function($scope, $collection){
+        $scope.barcode = '';
+        $scope.scan = function(){
+            cordova.plugins.barcodeScanner.scan(
+                function (result) {
+                    $scope.barcode = "Result: " + result.text + "\n" +
+                    "Format: " + result.format + "\n" +
+                    "Cancelled: " + result.cancelled;
+                }, 
+                function (error) {
+                    alert("Scanning failed: " + error);
+                }
+            );
+
         };
       }
     ]);
