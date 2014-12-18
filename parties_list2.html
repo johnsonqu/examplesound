@@ -1,6 +1,7 @@
 <template name="parties_list2.html">
   <div ng-controller="ScanInCtrl">
-        <button ng-click="scan()">Scan</button>
-        <textarea ng-model='barcode'></textarea>
+      <button ng-click="scan()" ng-disabled="items.length==5" class="btn btn-primary btn-lg">Scan [[ codeformat ]]</button>
+      <button type='button' class='btn btn-primary btn-lg'>[[ items.length ]]/5</button>
+      <div class='alert'>[[ status_txt ]]</div>
   </div>
 </template>

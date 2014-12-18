@@ -5,14 +5,33 @@
         <input ng-model="newParty.name">
         <label>Description</label>
         <input ng-model="newParty.description">
-        <button ng-click="parties.push(newParty)">Add</button>
+        <label>Public</label>
+        <input type="checkbox" ng-model="newParty.public">
+        <button ng-click="newParty.owner = $root.currentUser._id;insert(newParty)">Add</button>
     </form> 
     <ul>
-      <li ng-repeat="party in parties">
+      <div>
+        Search
+        <input type="search" ng-model="search">
+        <select ng-model="orderProperty">
+          <option value="name">Ascending</option>
+          <option value="-name">Descending</option>
+        </select>
+      </div> 
+      <li ng-repeat="party in parties | filter:search | orderBy:orderProperty">
         <a href="/parties/[[party._id]]">[[party.name]]</a>
         <p>[[party.description]]</p>
+        <label>Is public</label>
+        <input type="checkbox" ng-model="party.public">
         <button ng-click="remove(party)">X</button>
       </li>
     </ul>
+    <ul>
+      Users:
+      <li ng-repeat="user in users">
+        <div>[[ user.emails[0].address ]]</div>
+      </li>
+    </ul>
   </div>
+  <div><button ng-click="palert()">Play</button></div>
 </template>

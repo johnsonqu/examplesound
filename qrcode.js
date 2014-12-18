@@ -1,9 +1,25 @@
 Parties = new Mongo.Collection("parties");
 if (Meteor.isClient) {
-    angular.module('qrcode',['angular-meteor', 'ui.router']);
+    //angular.module('qrcode',['angular-meteor', 'ui.router', 'ngAudio']);
+    angular.module('qrcode',['angular-meteor', 'ui.router', 'ngAudio']);
 
     Meteor.startup(function () {
       angular.bootstrap(document, ['qrcode']);
+    });
+
+    angular.module("qrcode").filter('uninvited', function () {
+      return function (users, party) {
+        if (!party)
+          return false;
+
+        return _.filter(users, function (user) {
+          if (user._id == party.owner ||
+              _.contains(party.invited, user._id))
+            return false;
+          else
+            return true;
+        });
+      }
     });
     
     angular.module("qrcode").config(['$urlRouterProvider', '$stateProvider', '$locationProvider',
@@ -22,6 +38,11 @@ if (Meteor.isClient) {
             template: UiRouter.template('party_detail.html'),
             controller: 'PartyDetailsCtrl'
           })
+          .state('audioTest', {
+            url: '/partiesaudio',
+            template: UiRouter.template('party_audio.html'),
+            controller: 'PartyAudioCtrl'
+          })
           .state('parties2', {
             url: '/parties2',
             template: UiRouter.template('parties_list2.html'),
@@ -34,30 +55,61 @@ if (Meteor.isClient) {
     angular.module("qrcode").controller("PartiesListCtrl", ['$scope', '$collection',
       function($scope, $collection){
         $collection(Parties).bind($scope, 'parties', true, true); 
+        //$collection(Meteor.users).bind($scope, 'users', false, true);
+        $scope.orderProperty = 'name';
         $scope.remove = function(party){
           $scope.parties.splice( $scope.parties.indexOf(party), 1 );
         };
         $scope.insert = function(newParty) {
+          alert('Insert');
           $scope.parties.push(newParty);
+        };
+      }
+    ]);
+
+    angular.module("qrcode").controller("PartyAudioCtrl", ['$scope',
+      function($scope) {
+        $scope.palert = function() {
+          $scope.sound = ngAudio.load("Alert.mp3");
+          $scope.sound.play();
         };
       }
     ]);
     
     angular.module("qrcode").controller("ScanInCtrl", ['$scope', '$collection',
       function($scope, $collection){
-        $scope.barcode = '';
+        $scope.items = [];
+        $scope.status_txt = '';
+        $scope.codeformat = "QRCode";
+        $scope.cur_qrcode = "";
+        $scope.cur_barcode = "";
         $scope.scan = function(){
-            cordova.plugins.barcodeScanner.scan(
-                function (result) {
-                    $scope.barcode = "Result: " + result.text + "\n" +
-                    "Format: " + result.format + "\n" +
-                    "Cancelled: " + result.cancelled;
-                }, 
-                function (error) {
-                    alert("Scanning failed: " + error);
-                }
-            );
-
+            if ($scope.items.length < 5) {
+                cordova.plugins.barcodeScanner.scan(
+                    function (result) {
+                        console.log(result.format);
+                        console.log(result.cancelled);
+                        if (result.cancelled ==0 ) {
+                            if (result.format == 'QR_CODE') {
+                                $scope.codeformat = "BarCode";
+                                $scope.cur_qrcode = result.text;
+                            } else {
+                                $scope.codeformat = "QRCode";
+                                $scope.cur_barcode = result.text;
+                                $scope.items.push({'qrcode': $scope.cur_qrcode, 'barcode': $scope.cur_barcode});
+                            }
+                            $scope.$apply();
+                            $scope.scan();
+                        }
+                    }, 
+                    function (error) {
+                        console.log("Error");
+                    }
+               );
+            } else {
+                $scope.status_txt = "Pls upload the codes.";
+                $scope.$apply();
+            }
         };
       }
     ]);
@@ -95,5 +147,38 @@ if (Meteor.isServer) {
         Parties.insert({name: parties[i].name, description: parties[i].description});
 
     }
+  });
+  Meteor.publish("parties", function () {
+    return Parties.find({
+      $or:[
+        {$and:[
+          {"public": true},
+          {"public": {$exists: true}}
+        ]},
+        {$and:[
+          {owner: this.userId},
+          {owner: {$exists: true}}
+        ]}
+      ]});
+  });
+  Parties.allow({
+    insert: function (userId, party) {
+      return userId && party.owner === userId;
+    },
+    update: function (userId, party, fields, modifier) {
+      if (userId !== party.owner)
+        return false;
+
+      return true;
+    },
+    remove: function (userId, party) {
+      if (userId !== party.owner)
+        return false;
+
+      return true;
+    }
+  });
+  Meteor.publish("users", function () {
+      return Meteor.users.find({}, {fields: {emails: 1, profile: 1}});
   });
 }
